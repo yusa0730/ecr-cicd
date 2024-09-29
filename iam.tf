@@ -203,17 +203,19 @@ data "aws_iam_policy_document" "codepipeline_iap" {
       "${aws_s3_bucket.codepipeline_bucket.arn}/*"
     ]
   }
+
   statement {
     sid    = "ecs"
     effect = "Allow"
     actions = [
-      "ecs:DescriveServices",
+      "ecs:DescribeServices", # 修正: Descrive -> Describe
       "ecs:DescribeTaskDefinition",
       "ecs:RegisterTaskDefinition",
-      "ecs:UpdateService",
+      "ecs:UpdateService"
     ]
     resources = ["*"]
   }
+
   statement {
     sid    = "codebuild"
     effect = "Allow"
@@ -225,6 +227,7 @@ data "aws_iam_policy_document" "codepipeline_iap" {
       "${aws_codebuild_project.main.arn}"
     ]
   }
+
   statement {
     sid    = "githubconnection"
     effect = "Allow"
@@ -235,17 +238,18 @@ data "aws_iam_policy_document" "codepipeline_iap" {
       "${aws_codestarconnections_connection.main.arn}"
     ]
   }
+
   statement {
+    sid       = "PassRoleECS"
     effect    = "Allow"
-    resources = ["*"]
+    resources = ["arn:aws:iam::${data.aws_caller_identity.self.account_id}:role/ecs-task-execution-role"] # タスク実行ロールを指定
 
     actions = ["iam:PassRole"]
 
     condition {
       test     = "StringLike"
       variable = "iam:PassedToService"
-
-      values = ["ecs-tasks.amazonaws.com"]
+      values   = ["ecs-tasks.amazonaws.com"]
     }
   }
 }

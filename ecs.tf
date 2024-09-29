@@ -21,19 +21,18 @@ resource "aws_ecs_task_definition" "main" {
   cpu                      = "256"
   memory                   = "512"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
-  task_role_arn            = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_execution_role.arn # 必要に応じて分離
 
   container_definitions = jsonencode([
     {
       cpu       = 0
       memory    = 512
-      name      = "${var.project_name}-${var.env}-nginx"
-      image     = "nginx:latest"
+      name      = "nginx"
+      image     = "${data.aws_caller_identity.self.account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.project_name}-${var.env}-nginx:latest"
       essential = true
       portMappings = [
         {
-          containerPort = 80
-          hostPort      = 80
+          containerPort = 80 # hostPortは省略可能
         }
       ]
       logConfiguration = {
