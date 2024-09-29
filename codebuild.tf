@@ -34,5 +34,15 @@ resource "aws_codebuild_project" "main" {
       name  = "IMAGE"
       value = "${var.project_name}-${var.env}-nginx-ecr:latest"
     }
+
+    environment_variable {
+      name  = "ECS_CLUSTER_NAME"
+      value = aws_ecs_cluster.main.name
+    }
+
+    environment_variable {
+      name  = "ECS_SERVICE_NAME"
+      value = aws_ecs_service.main.name
+    }
   }
 }
