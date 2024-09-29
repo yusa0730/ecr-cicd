@@ -44,5 +44,15 @@ resource "aws_codebuild_project" "main" {
       name  = "ECS_SERVICE_NAME"
       value = aws_ecs_service.main.name
     }
+
+    environment_variable {
+      name  = "ECS_TASK_DEFINITION"
+      value = aws_ecs_task_definition.main.family
+    }
+  }
+
+  cache {
+    type  = "LOCAL"
+    modes = ["LOCAL_DOCKER_LAYER_CACHE", "LOCAL_SOURCE_CACHE"] # Dockerレイヤーとソースコードのキャッシュ
   }
 }

@@ -28,10 +28,10 @@ phases:
   post_build:
     commands:
       - echo "Creating imagedefinitions.json for deployment..."
-      - printf '[{"name":"nginx","imageUri":"%s"}]' "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/${IMAGE%:*}:latest" > imagedefinitions.json
+      - printf '[{"name":"%s","imageUri":"%s"}]' "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/${IMAGE%:*}:latest" > imagedefinitions.json
       - cat imagedefinitions.json
       - echo "Updating ECS service to force a new deployment..."
-      - aws ecs update-service --cluster $ECS_CLUSTER_NAME --service $ECS_SERVICE_NAME --force-new-deployment
+      - aws ecs update-service --cluster $ECS_CLUSTER_NAME --service $ECS_SERVICE_NAME --task-definition $ECS_TASK_DEFINITION:latest --force-new-deployment
 
 artifacts:
   files:

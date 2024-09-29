@@ -141,6 +141,34 @@ data "aws_iam_policy_document" "codebuild_iap" {
   }
 
   statement {
+    sid    = "ecs"
+    effect = "Allow"
+    actions = [
+      "ecs:DescribeServices",
+      "ecs:DescribeTaskDefinition",
+      "ecs:RegisterTaskDefinition",
+      "ecs:UpdateService"
+    ]
+    resources = [
+      "arn:aws:ecs:${var.region}:${data.aws_caller_identity.self.account_id}:service/${aws_ecs_cluster.main.name}/${aws_ecs_service.main.name}"
+    ]
+  }
+
+  statement {
+    sid       = "PassRoleECS"
+    effect    = "Allow"
+    resources = ["arn:aws:iam::${data.aws_caller_identity.self.account_id}:role/ecs-task-execution-role"] # タスク実行ロールを指定
+
+    actions = ["iam:PassRole"]
+
+    condition {
+      test     = "StringLike"
+      variable = "iam:PassedToService"
+      values   = ["ecs-tasks.amazonaws.com"]
+    }
+  }
+
+  statement {
     sid    = "githubconnection"
     effect = "Allow"
     resources = [
