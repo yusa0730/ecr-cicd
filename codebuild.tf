@@ -32,7 +32,7 @@ resource "aws_codebuild_project" "main" {
 
     environment_variable {
       name  = "IMAGE"
-      value = "nginx:latest"
+      value = "${var.project_name}-${var.env}-nginx-ecr:latest"
     }
   }
 }

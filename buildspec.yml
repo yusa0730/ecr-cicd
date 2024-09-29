@@ -23,12 +23,12 @@ phases:
     commands:
       - echo "Starting build phase..."
       - docker build -t $IMAGE .
-      - docker tag $IMAGE $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE || (echo "Docker push failed" && exit 1)
+      - docker tag $IMAGE $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/${IMAGE%:*}
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/${IMAGE%:*} || (echo "Docker push failed" && exit 1)
   post_build:
     commands:
       - echo "Creating imagedefinitions.json for deployment..."
-      - printf '[{"name":"%s","imageUri":"%s"}]' "nginx" "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE" > imagedefinitions.json
+      - printf '[{"name":"nginx","imageUri":"%s"}]' "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/${IMAGE%:*}" > imagedefinitions.json
       - cat imagedefinitions.json
 
 artifacts:
