@@ -7,26 +7,30 @@ phases:
   pre_build:
     commands:
       - echo "Setting up pre-build phase..."
-      - AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text) || (echo "Failed to retrieve AWS account ID" && exit 1)
-      - echo "AWS Account ID: $AWS_ACCOUNT_ID"
-      - if [ -z "$IMAGE" ]; then echo "IMAGE environment variable is not set!" && exit 1; fi
+      - |
+        AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text) || (echo "Failed to retrieve AWS account ID" && exit 1)
+        echo "AWS Account ID: $AWS_ACCOUNT_ID"
+      - |
+        if [ -z "$IMAGE" ]; then 
+          echo "IMAGE environment variable is not set!" && exit 1
+        fi
       - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com || (echo "Docker login failed" && exit 1)
+      - |
+        aws ecr get-login-password --region $AWS_DEFAULT_REGION | \
+        docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com || \
+        (echo "Docker login failed" && exit 1)
   build:
     commands:
       - echo "Starting build phase..."
-      - echo "Building the Docker image..."
       - docker build -t $IMAGE .
-      - echo "Tagging the Docker image..."
       - docker tag $IMAGE $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE
-      - echo "Pushing the Docker image to ECR..."
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE || (echo "Docker push failed" && exit 1)
   post_build:
     commands:
       - echo "Creating imagedefinitions.json for deployment..."
       - printf '[{"name":"%s","imageUri":"%s"}]' "nginx" "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE" > imagedefinitions.json
-      - echo "imagedefinitions.json created:"
       - cat imagedefinitions.json
+
 artifacts:
   files:
     - imagedefinitions.json
