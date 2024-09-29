@@ -15,6 +15,7 @@ phases:
   post_build:
     commands:
       - IMAGE_NAME="${IMAGE%:*}" # "latest"を除いたイメージ名を取得
+      - echo $IMAGE_NAME
       - printf '[{"name":"%s","imageUri":"%s"}]' "$IMAGE_NAME" "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_NAME:latest" > imagedefinitions.json
       - cat imagedefinitions.json
 artifacts:

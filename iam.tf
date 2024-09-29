@@ -66,6 +66,10 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_attachment" {
   role       = aws_iam_role.ecs_task_execution_role.name
 }
 
+resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+  role       = aws_iam_role.ecs_task_execution_role.name
+}
 
 ## ======codebuild======
 resource "aws_iam_role" "codebuild_role" {
@@ -141,34 +145,6 @@ data "aws_iam_policy_document" "codebuild_iap" {
   }
 
   statement {
-    sid    = "ecs"
-    effect = "Allow"
-    actions = [
-      "ecs:DescribeServices",
-      "ecs:DescribeTaskDefinition",
-      "ecs:RegisterTaskDefinition",
-      "ecs:UpdateService"
-    ]
-    resources = [
-      "arn:aws:ecs:${var.region}:${data.aws_caller_identity.self.account_id}:service/${aws_ecs_cluster.main.name}/${aws_ecs_service.main.name}"
-    ]
-  }
-
-  statement {
-    sid       = "PassRoleECS"
-    effect    = "Allow"
-    resources = ["arn:aws:iam::${data.aws_caller_identity.self.account_id}:role/ecs-task-execution-role"] # タスク実行ロールを指定
-
-    actions = ["iam:PassRole"]
-
-    condition {
-      test     = "StringLike"
-      variable = "iam:PassedToService"
-      values   = ["ecs-tasks.amazonaws.com"]
-    }
-  }
-
-  statement {
     sid    = "githubconnection"
     effect = "Allow"
     resources = [
@@ -233,15 +209,15 @@ data "aws_iam_policy_document" "codepipeline_iap" {
   }
 
   statement {
-    sid    = "ecs"
-    effect = "Allow"
+    effect    = "Allow"
+    resources = ["*"]
+
     actions = [
-      "ecs:DescribeServices", # 修正: Descrive -> Describe
+      "ecs:DescribeServices",
       "ecs:DescribeTaskDefinition",
       "ecs:RegisterTaskDefinition",
-      "ecs:UpdateService"
+      "ecs:UpdateService",
     ]
-    resources = ["*"]
   }
 
   statement {
@@ -268,16 +244,18 @@ data "aws_iam_policy_document" "codepipeline_iap" {
   }
 
   statement {
-    sid       = "PassRoleECS"
-    effect    = "Allow"
-    resources = ["arn:aws:iam::${data.aws_caller_identity.self.account_id}:role/ecs-task-execution-role"] # タスク実行ロールを指定
+    effect = "Allow"
+    resources = [
+      "${aws_iam_role.ecs_task_execution_role.arn}"
+    ]
 
     actions = ["iam:PassRole"]
 
     condition {
       test     = "StringLike"
       variable = "iam:PassedToService"
-      values   = ["ecs-tasks.amazonaws.com"]
+
+      values = ["ecs-tasks.amazonaws.com"]
     }
   }
 }
