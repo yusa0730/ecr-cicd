@@ -1,5 +1,5 @@
 resource "aws_ecr_repository" "main" {
-  name                 = "${var.project_name}-${var.env}-nginx-ecr"
+  name                 = "${var.project_name}-${var.env}-nginx"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
@@ -7,7 +7,7 @@ resource "aws_ecr_repository" "main" {
   }
 
   tags = {
-    Name      = "${var.project_name}-${var.env}-nginx-ecr"
+    Name      = "${var.project_name}-${var.env}-nginx"
     Env       = var.env
     ManagedBy = "Terraform"
   }

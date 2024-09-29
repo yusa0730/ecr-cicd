@@ -27,11 +27,12 @@ resource "aws_ecs_task_definition" "main" {
     {
       cpu       = 0
       memory    = 512
-      name      = "nginx"
-      image     = "${data.aws_caller_identity.self.account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.project_name}-${var.env}-nginx:latest"
+      name      = "${var.project_name}-${var.env}-nginx"
+      image     = "nginx:latest"
       essential = true
       portMappings = [
         {
+          protocol      = "tcp",
           containerPort = 80 # hostPortは省略可能
         }
       ]

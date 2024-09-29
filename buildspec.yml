@@ -6,33 +6,16 @@ phases:
       docker: 18
   pre_build:
     commands:
-      - echo "Setting up pre-build phase..."
-      - |
-        AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text) || (echo "Failed to retrieve AWS account ID" && exit 1)
-        echo "AWS Account ID: $AWS_ACCOUNT_ID"
-      - |
-        if [ -z "$IMAGE" ]; then 
-          echo "IMAGE environment variable is not set!" && exit 1
-        fi
-      - echo "Logging in to Amazon ECR..."
-      - |
-        aws ecr get-login-password --region $AWS_DEFAULT_REGION | \
-        docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com || \
-        (echo "Docker login failed" && exit 1)
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
   build:
     commands:
-      - echo "Starting build phase..."
       - docker build -t $IMAGE .
-      - docker tag $IMAGE $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/${IMAGE%:*} # タグ付け
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/${IMAGE%:*} || (echo "Docker push failed" && exit 1) # プッシュ
+      - docker tag $IMAGE $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE
   post_build:
     commands:
-      - echo "Creating imagedefinitions.json for deployment..."
-      - printf '[{"name":"%s","imageUri":"%s"}]' "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/${IMAGE%:*}:latest" > imagedefinitions.json
+      - IMAGE_NAME="${IMAGE%:*}" # "latest"を除いたイメージ名を取得
+      - printf '[{"name":"%s","imageUri":"%s"}]' "$IMAGE_NAME" "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_NAME:latest" > imagedefinitions.json
       - cat imagedefinitions.json
-      - echo "Updating ECS service to force a new deployment..."
-      - aws ecs update-service --cluster $ECS_CLUSTER_NAME --service $ECS_SERVICE_NAME --task-definition $ECS_TASK_DEFINITION:latest --force-new-deployment
-
 artifacts:
-  files:
-    - imagedefinitions.json
+  files: imagedefinitions.json
