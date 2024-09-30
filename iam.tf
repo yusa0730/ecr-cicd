@@ -217,6 +217,7 @@ data "aws_iam_policy_document" "codepipeline_iap" {
       "ecs:DescribeTaskDefinition",
       "ecs:RegisterTaskDefinition",
       "ecs:UpdateService",
+      "ecs:TagResource"
     ]
   }
 
@@ -244,10 +245,8 @@ data "aws_iam_policy_document" "codepipeline_iap" {
   }
 
   statement {
-    effect = "Allow"
-    resources = [
-      "${aws_iam_role.ecs_task_execution_role.arn}"
-    ]
+    effect    = "Allow"
+    resources = ["*"]
 
     actions = ["iam:PassRole"]
 
@@ -255,7 +254,12 @@ data "aws_iam_policy_document" "codepipeline_iap" {
       test     = "StringLike"
       variable = "iam:PassedToService"
 
-      values = ["ecs-tasks.amazonaws.com"]
+      values = [
+        "ecs-tasks.amazonaws.com",
+        "cloudformation.amazonaws.com",
+        "elasticbeanstalk.amazonaws.com",
+        "ec2.amazonaws.com"
+      ]
     }
   }
 }
